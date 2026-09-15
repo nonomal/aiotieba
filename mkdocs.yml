@@ -17,10 +17,12 @@ theme:
         name: Switch to light mode
   features:
     - navigation.sections
+    - search.suggest
+    - search.highlight
   language: zh
 
-repo_name: Starry-OvO/aiotieba
-repo_url: https://github.com/Starry-OvO/aiotieba/
+repo_name: lumina37/aiotieba
+repo_url: https://github.com/lumina37/aiotieba/
 
 nav:
   - 介绍: index.md
@@ -38,7 +40,9 @@ nav:
           - threads: ref/classdef/threads.md
           - posts: ref/classdef/posts.md
           - comments: ref/classdef/comments.md
+          - last_replyers: ref/classdef/last_replyers.md
           - searches: ref/classdef/searches.md
+          - searches_global: ref/classdef/searches_global.md
           - user_info: ref/classdef/user_info.md
           - profile: ref/classdef/profile.md
           - follow_forums: ref/classdef/follow_forums.md
@@ -55,11 +59,11 @@ nav:
           - square_forums: ref/classdef/square_forums.md
           - bawu_info: ref/classdef/bawu_info.md
           - bawu_perm: ref/classdef/bawu_perm.md
-          - god_threads: ref/classdef/god_threads.md
           - rank_users: ref/classdef/rank_users.md
           - member_users: ref/classdef/member_users.md
           - blocks: ref/classdef/blocks.md
           - recovers: ref/classdef/recovers.md
+          - recover_thread: ref/classdef/recover_thread.md
           - bawu_userlogs: ref/classdef/bawu_userlogs.md
           - bawu_postlogs: ref/classdef/bawu_postlogs.md
           - unblock_appeals: ref/classdef/unblock_appeals.md
@@ -67,6 +71,13 @@ nav:
           - statistics: ref/classdef/statistics.md
           - recom_status: ref/classdef/recom_status.md
           - group_msg: ref/classdef/group_msg.md
+          - bawu_memberlist: ref/classdef/bawu_memberlist.md
+          - forum: ref/classdef/forum.md
+          - forum_level: ref/classdef/forum_level.md
+          - login: ref/classdef/login.md
+          - rank_forums: ref/classdef/rank_forums.md
+          - tab_map: ref/classdef/tab_map.md
+          - user_forum_info: ref/classdef/user_forum_info.md
 
 markdown_extensions:
   - md_in_html
@@ -75,6 +86,7 @@ markdown_extensions:
       css_class: highlight
 
 plugins:
+  - search
   - mkdocstrings:
       handlers:
         python:

@@ -4,7 +4,7 @@ import aiotieba as tb
 
 
 @pytest.mark.flaky(reruns=2, reruns_delay=5.0)
-@pytest.mark.asyncio(scope="session")
+@pytest.mark.asyncio(loop_scope="session")
 async def test_get_user_posts(client: tb.Client):
     user_id = 4954297652
     postss = await client.get_user_posts(user_id)
@@ -25,6 +25,6 @@ async def test_get_user_posts(client: tb.Client):
     ##### UserInfo_u #####
     user = post.user
     assert user.user_id == post.author_id
-    assert user.portrait != ''
-    assert user.user_name != ''
-    assert user.nick_name_new != ''
+    assert user.portrait != ""
+    assert user.user_name != ""
+    assert user.nick_name_new != ""

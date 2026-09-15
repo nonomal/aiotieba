@@ -118,6 +118,7 @@ async def main():
 
     print(user)
 
+
 asyncio.run(main())
 ```
 
@@ -127,6 +128,48 @@ asyncio.run(main())
 
 ```log
 AAAA（你的用户名）
+```
+
+## 内容的层次结构
+
+本样例将协助你理解“主题帖-回复-楼中楼”的三级层次结构，以及如何解析富媒体内容
+
+### 样例代码
+
+本样例将逐级获取并打印“主题帖-回复-楼中楼”中各层级的部分内容
+
+```python
+import asyncio
+
+import aiotieba as tb
+
+
+async def main():
+    async with tb.Client() as client:
+        threads = await client.get_threads("天堂鸡汤")
+        for thread in threads[3:6]:
+            print(thread)  # 打印整个主题帖
+            print(thread.contents)  # 打印主题帖中的内容碎片（含富媒体信息）
+            print(thread.contents.emojis)  # 仅打印表情相关的内容碎片
+
+        selected_thread = threads[4]
+        posts = await client.get_posts(selected_thread.tid)
+        for post in posts[3:6]:
+            print(post)  # 打印整个回复
+            print(post.contents)  # 打印回复中的内容碎片
+            print(post.contents.imgs)  # 仅打印图片相关的内容碎片
+
+        for post in posts:
+            if post.reply_num == 0:
+                continue
+            comments = await client.get_comments(post.tid, post.pid)
+            for comment in comments:
+                print(comment)  # 打印整个楼中楼
+                print(comment.contents.ats)  # 仅打印@相关的内容碎片
+                break
+
+
+asyncio.run(main())
 ```
 
 ## 运行时更改BDUSS
@@ -184,7 +227,7 @@ BDUSS2 = "在这里输入第二个账号的BDUSS"
 
 
 async def main():
-    async with (tb.Client(BDUSS1) as client1, tb.Client(BDUSS2) as client2):
+    async with tb.Client(BDUSS1) as client1, tb.Client(BDUSS2) as client2:
         user1 = await client1.get_self_info()
         user2 = await client2.get_self_info()
         print(f"账号1: {user1}, 账号2: {user2}")
@@ -199,41 +242,6 @@ asyncio.run(main())
 
 ```log
 账号1: AAAA, 账号2: BBBB
-```
-
-## 使用STOKEN
-
-只有少数接口需要用到`STOKEN`，例如用于获取自身关注吧列表的`get_self_follow_forums`
-
-### 样例代码
-
-本样例将获取并打印当前账号的一部分关注吧列表
-
-```python
-import asyncio
-
-import aiotieba as tb
-
-BDUSS = "在这里输入你账号的BDUSS"
-STOKEN = "在这里输入你账号的网页端STOKEN"
-
-
-async def main():
-    account = tb.Account(BDUSS, STOKEN)
-    async with tb.Client(account=account) as client:
-        forums = await client.get_self_follow_forums()
-        print(forums[:3])
-
-
-asyncio.run(main())
-```
-
-### 期望结果
-
-如果你的[`BDUSS`](#bduss)和`STOKEN`均填写无误，你会获得类似下面这样的结果
-
-```log
-[SelfFollowForum(fid=1999, fname='启动！', level=1), SelfFollowForum(fid=1999, fname='启动！', level=1), SelfFollowForum(fid=1999, fname='启动！', level=1)]
 ```
 
 ## Account的序列化与反序列化
@@ -290,12 +298,13 @@ import aiotieba as tb
 
 BDUSS = "在这里输入你账号的BDUSS"
 
+
 async def main():
     async with tb.Client(BDUSS) as client:
         # [1] 什么是`asyncio.gather`？
         # 参考官方文档：并发运行任务
         # https://docs.python.org/zh-cn/3/library/asyncio-task.html#running-tasks-concurrently
-        user, threads = await asyncio.gather(client.get_self_info(), client.get_threads('天堂鸡汤'))
+        user, threads = await asyncio.gather(client.get_self_info(), client.get_threads("天堂鸡汤"))
 
     # 将获取的信息打印到日志
     print(f"当前用户: {user}")
@@ -361,9 +370,10 @@ tid: 8204273523 最后回复时间戳: 1672500829 标题: 你如初待我模样
 本样例将通过任务队列实现一个多协程爬虫，快速爬取天堂鸡汤吧的前32页共960条主题帖，并打印其中浏览量最高的10条
 
 ```python
+from __future__ import annotations
+
 import asyncio
 import time
-from typing import List
 
 import aiotieba as tb
 from aiotieba.logging import get_logger as LOG
@@ -383,7 +393,7 @@ async def crawler(fname: str):
     LOG().info("Spider start")
 
     # thread_list用来保存主题帖列表
-    thread_list: List[tb.typing.Thread] = []
+    thread_list: list[tb.typing.Thread] = []
 
     # 使用键名"default"对应的BDUSS创建客户端
     async with tb.Client(BDUSS) as client:
@@ -420,11 +430,11 @@ async def crawler(fname: str):
                     # 消费者协程不断地使用Queue.get从task_queue中拉取由生产者协程提供的页码pn作为任务
                     # asyncio.wait_for会等待作为参数的协程执行完毕直到超时
                     # timeout=1即把超时时间设为1秒
-                    # 如果超过1秒未获取到新的页码pn，asyncio.wait_for(...)将抛出asyncio.TimeoutError
+                    # 如果超过1秒未获取到新的页码pn，asyncio.wait_for(...)将抛出TimeoutError
                     pn = await asyncio.wait_for(task_queue.get(), timeout=1)
                     LOG().debug(f"Worker#{i} handling pn:{pn}")
-                except asyncio.TimeoutError:
-                    # 捕获asyncio.TimeoutError以退出协程
+                except TimeoutError:
+                    # 捕获TimeoutError以退出协程
                     if is_running is False:
                         # 如果is_running为False，意味着不需要再轮询task_queue获取新任务
                         LOG().debug(f"Worker#{i} quit")
@@ -444,7 +454,7 @@ async def crawler(fname: str):
         # 因为asyncio.gather只接受协程作为参数，不接受协程列表
         await asyncio.gather(*workers, producer())
 
-    LOG().info(f"Spider complete. Time cost: {time.perf_counter()-start_time:.4f} secs")
+    LOG().info(f"Spider complete. Time cost: {time.perf_counter() - start_time:.4f} secs")
 
     # 按主题帖浏览量降序排序
     thread_list.sort(key=lambda thread: thread.view_num, reverse=True)

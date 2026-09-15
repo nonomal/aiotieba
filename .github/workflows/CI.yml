@@ -6,46 +6,48 @@ on:
   push:
     branches: [develop]
     paths:
-      - "aiotieba/**"
-      - "thirdparty/**"
+      - "pyproject.toml"
+      - "pytest.ini"
+      - "src/**"
       - "tests/**"
-      - ".github/workflows/CI*"
+      - ".github/workflows/CI.yml"
   pull_request:
     branches: [develop]
     paths:
-      - "aiotieba/**"
-      - "thirdparty/**"
+      - "pyproject.toml"
+      - "pytest.ini"
+      - "src/**"
       - "tests/**"
-      - ".github/workflows/CI*"
+      - ".github/workflows/CI.yml"
   workflow_dispatch:
 
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     environment: develop
 
     strategy:
       matrix:
-        python-version: ["3.8", "3.12"]
+        python-version: ["3.11", "3.15"]
 
     steps:
-      - name: Checkout develop
-        uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v7
         with:
           ref: develop
 
-      - name: Setup Rye
-        uses: eifinger/setup-rye@v3
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v7
 
-      - name: Pin Py${{ matrix.python-version }}
+      - name: Install dependencies
         run: |
-          rye pin ${{ matrix.python-version }}
-          rye sync --features=speedup
+          uv python pin ${{ matrix.python-version }}
+          uv sync
 
       - name: Run tests
         env:
           TB_BDUSS: ${{ secrets.BDUSS }}
           TB_STOKEN: ${{ secrets.STOKEN }}
-        run: rye test
+        run: uv run pytest
